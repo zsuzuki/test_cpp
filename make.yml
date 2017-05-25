@@ -1,0 +1,48 @@
+#
+# test build
+#
+variable:
+- name: compiler
+  value: clang++
+- name: archiver
+  value: ar
+- name: linker
+  value: clang++
+
+include:
+- list:
+  - /usr/local/include
+
+define:
+- list:
+  debug:
+  - DEBUG=1
+
+option:
+- list:
+  - c
+  - g
+  - std=c++14
+  - Wall
+  debug:
+  - O0
+  release:
+  - O3
+
+link_option:
+- list:
+  - L.
+
+libraries:
+- list:
+  - z
+
+tests:
+- list:
+  - zlib_test.cpp
+  - function_call.cpp
+  - thread_test.cpp
+
+target:
+- name: testcpp
+  type: test
