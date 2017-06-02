@@ -42,6 +42,7 @@ tests:
   - zlib_test.cpp
   - function_call.cpp
   - thread_test.cpp
+  - input_step.cpp
 
 target:
 - name: testcpp
