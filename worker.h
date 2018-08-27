@@ -8,23 +8,25 @@
 #include <thread>
 #include <vector>
 
-using work_size_t = uint16_t;
-
-// ワーカー
-class Worker
-{
-public:
-  virtual ~Worker()  = default;
-  virtual void run() = 0;
-
-  virtual work_size_t getNextBuffer() const = 0;
-};
-
 // ワーカースレッド呼び出し
 class WorkerThread
 {
+private:
+  //
+  using work_size_t        = uint16_t;
   using atomic_work_size_t = std::atomic<work_size_t>;
 
+  // ワーカー
+  class Worker
+  {
+  public:
+    virtual ~Worker()  = default;
+    virtual void run() = 0;
+
+    virtual work_size_t getNextBuffer() const = 0;
+  };
+
+  //
   bool                     enabled{true};
   std::atomic_int          launch{0};
   std::vector<uint8_t>     buffer;
@@ -113,7 +115,7 @@ public:
       std::this_thread::sleep_for(std::chrono::microseconds(1));
   }
 
-  ~WorkerThread()
+  virtual ~WorkerThread()
   {
     enabled = false;
     for (auto& th : thread_list)
