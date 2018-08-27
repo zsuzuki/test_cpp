@@ -1,31 +1,30 @@
 {
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
-    "version": "0.1.0",
+    "version": "2.0.0",
     "tasks": [
         {
-            "taskName": "cbuild",
+            "label": "cbuild",
             "command": "cbuild",
-            "isShellCommand": true,
-            "showOutput": "always"
+            "args": [
+                "-t",
+                "th"
+            ],
+            "type": "process",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
         },
         {
-            "taskName": "ninja",
+            "label": "ninja",
+            "type": "process",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "command": "ninja",
-            "isShellCommand": true,
-            "showOutput": "always",
-            "problemMatcher": {
-                "owner": "cpp",
-                "fileLocation": "absolute",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+):(\\d+): (warning|error): (.*)",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "severity": 4,
-                    "message": 5
-                }
-            }
+            "problemMatcher": "$gcc"
         }
     ]
 }

@@ -24,9 +24,12 @@ option:
   - g
   - std=c++14
   - Wall
-  debug:
+  - MMD
+  - MT $out
+  - MF $dep
+debug:
   - O0
-  release:
+release:
   - O3
 
 link_option:
@@ -44,6 +47,14 @@ tests:
   - thread_test.cpp
   - input_step.cpp
 
+source:
+- {target: th, list: [ thread_test.cpp ]}
+- {target: que, list: [ queue.cpp ]}
+
 target:
 - name: testcpp
   type: test
+- name: th
+  type: execute
+- name: que
+  type: execute
