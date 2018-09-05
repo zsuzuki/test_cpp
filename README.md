@@ -34,3 +34,4 @@ zlibを使うテスト。
 
 ### toml.cpp
 tomlで定義した構造をC言語のstructにしてダンプする。
+[cpptoml](https://github.com/skystrife/cpptoml)を使用しています。

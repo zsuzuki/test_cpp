@@ -2,7 +2,7 @@
 // Copyright 2018 Yoshinori Suzuki<wave.suzuki.z@gmail.com>
 //
 
-#include <cpptoml.h>
+#include <cpptoml.h> // [cpptoml](https://github.com/skystrife/cpptoml)
 #include <iostream>
 #include <string>
 
