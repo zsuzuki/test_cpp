@@ -48,13 +48,22 @@ tests:
   - input_step.cpp
 
 source:
-- {target: th, list: [ thread_test.cpp ]}
-- {target: que, list: [ queue.cpp ]}
+- {target: memcached, list: [ memcached.cpp ]}
+- {target: thread_test, list: [ thread_test.cpp ]}
+- {target: queue, list: [ queue.cpp ]}
+- {target: toml, list: [ toml.cpp ]}
+- {target: size, list: [ size.cpp ]}
 
 target:
 - name: testcpp
   type: test
-- name: th
+- name: thread_test
   type: execute
-- name: que
+- name: memcached
+  type: execute
+- name: queue
+  type: execute
+- name: toml
+  type: execute
+- name: size
   type: execute

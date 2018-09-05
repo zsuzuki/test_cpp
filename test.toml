@@ -1,0 +1,29 @@
+#
+# class name
+#
+name = "TestParameter"
+include = ["test.h", "system.h"]
+
+#
+[[contents]]
+name = "sample"
+type = "int64_t"
+
+[[contents]]
+name = "test"
+type = "unsigned"
+bits = 5
+
+[[contents]]
+name = "field"
+type = "signed"
+bits = 10
+
+[[contents]]
+name = "num"
+type = "float"
+
+[[contents]]
+name = "array"
+type = "uint8_t"
+size = 8
