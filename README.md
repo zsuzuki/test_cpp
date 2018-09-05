@@ -28,3 +28,9 @@ memcachedの使用テストコード。
 
 ### zlib_test.cpp
 zlibを使うテスト。
+
+### size.cpp
+構造体のサイズを表示するだけ。
+
+### toml.cpp
+tomlで定義した構造をC言語のstructにしてダンプする。
