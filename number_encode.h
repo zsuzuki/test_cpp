@@ -45,7 +45,7 @@ encode(uint32_t num)
   code ^= en.first;
   code *= en.second;
   code = rotate(code, s);
-  code = ((code << 5) & 0xffffffff00000000ULL) | (code & 0x07ffffffULL) | (s << (32 - 5));
+  code = (code & 0xffffffff) << 32 | ((code >> 32) & 0x07ffffff) | (s << (32 - 5));
 
   return code;
 }
@@ -54,7 +54,7 @@ encode(uint32_t num)
 uint32_t
 decode(uint64_t code)
 {
-  uint64_t num = (code & 0x07ffffffULL) | ((code >> 5) & 0x07fffffff8000000ULL);
+  uint64_t num = (code & 0x07ffffff) << 32 | ((code >> 32) & 0xffffffff);
   uint64_t s   = (code >> (32 - 5)) & 31;
   num          = rotate(num, 59 - s);
   auto en      = get_encode_number(s);
