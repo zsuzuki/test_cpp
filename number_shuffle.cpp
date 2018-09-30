@@ -3,19 +3,18 @@
 //
 #include <array>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <random>
 #include <string>
-#include <cstring>
 
 namespace
 {
 const uint64_t random_table[] = {
-    0x07c667b4, 0x0113a0c7, 0x059e95d5, 0x00f8906b, 0x06c19c92, 0x0492616c, 0x03fd9fac, 0x00ff7ab4, 
-    0x0031a32e, 0x0451a094, 0x01cae570, 0x019abd2f, 0x07890755, 0x077483a3, 0x060b7bec, 0x0101b5e0, 
-    0x024a79dc, 0x05d5e211, 0x00d49adf, 0x002a9014, 0x001d4d7e, 0x047f0b48, 0x039ee552, 0x04bfbdac, 
-    0x03b96e2e, 0x07b19f81, 0x02c40a61, 0x056e07fe, 0x021ea4c0, 0x03d1bc1d, 0x02a5ac4c, 0x0577c6e4, 
-    0x02f7c379,
+    0x07c667b4, 0x0113a0c7, 0x059e95d5, 0x00f8906b, 0x06c19c92, 0x0492616c, 0x03fd9fac, 0x00ff7ab4, 0x0031a32e,
+    0x0451a094, 0x01cae570, 0x019abd2f, 0x07890755, 0x077483a3, 0x060b7bec, 0x0101b5e0, 0x024a79dc, 0x05d5e211,
+    0x00d49adf, 0x002a9014, 0x001d4d7e, 0x047f0b48, 0x039ee552, 0x04bfbdac, 0x03b96e2e, 0x07b19f81, 0x02c40a61,
+    0x056e07fe, 0x021ea4c0, 0x03d1bc1d, 0x02a5ac4c, 0x0577c6e4, 0x02f7c379,
 };
 uint64_t shift_count = 0;
 
@@ -66,19 +65,19 @@ add(uint64_t a, uint64_t b)
 
 //
 uint64_t
-unpack_h16(const char* str)
+unpack_h64(const char* str)
 {
   int l = std::strlen(str);
   if (l <= 8)
   {
     return std::strtol(str, nullptr, 16);
   }
-  
+
   std::string n(str);
-  auto n1 = n.substr(0, l - 8);
-  auto n2 = n.substr(l - 8);
-  uint64_t upper = std::strtol(n1.c_str(), nullptr, 16);
-  uint64_t lower = std::strtol(n2.c_str(), nullptr, 16);
+  auto        n1    = n.substr(0, l - 8);
+  auto        n2    = n.substr(l - 8);
+  uint64_t    upper = std::strtol(n1.c_str(), nullptr, 16);
+  uint64_t    lower = std::strtol(n2.c_str(), nullptr, 16);
   return upper << 32 | lower;
 }
 
@@ -98,17 +97,17 @@ main(int argc, char* argv[])
   {
     if (argc > 2)
     {
-      uint64_t n1 = unpack_h16(argv[1]);
-      uint64_t n2 = unpack_h16(argv[2]);
-      auto code = add(n1, n2);
-      auto ret  = decode(code);
-      std::cout << "Add: " << ret << "/(" << decode(n1) << ")" << std::hex << code << std::dec << std::endl;
+      uint64_t n1   = unpack_h64(argv[1]);
+      uint64_t n2   = unpack_h64(argv[2]);
+      auto     code = add(n1, n2);
+      auto     ret  = decode(code);
+      std::cout << "Add: " << ret << "/" << std::hex << code << std::dec << std::endl;
     }
     else
     {
-      uint32_t n = std::atoi(argv[1]);
-      auto code = encode(n);
-      auto ret  = decode(code);
+      uint32_t n    = std::atoi(argv[1]);
+      auto     code = encode(n);
+      auto     ret  = decode(code);
       std::cout << "N: " << n << "/" << ret << "/" << std::hex << code << std::dec << std::endl;
     }
   }
@@ -116,7 +115,6 @@ main(int argc, char* argv[])
   {
     for (auto b : base)
     {
-      uint64_t num = b;
       auto code = encode(b);
       auto ret  = decode(code);
       std::cout << "C: " << b << "/" << ret << "/" << std::hex << code << std::dec << std::endl;
