@@ -56,7 +56,7 @@ enum class CHCODE : uint64_t
   C_Y,
   C_Z,
   C_Question,
-  C_Asterisk,
+  C_Dot,
   C_AtMark,
   C_Sharp,
   C_Dollar,
@@ -81,11 +81,12 @@ std::map<char, CHCODE> encode_map = {
     {'Y', CHCODE::C_Y},      {'Z', CHCODE::C_Z},        {'-', CHCODE::C_Hyphen},    {'+', CHCODE::C_Plus},
     {'/', CHCODE::C_Slash},  {'(', CHCODE::C_LBrace},   {')', CHCODE::C_RBrace},    {'[', CHCODE::C_LBrace},
     {']', CHCODE::C_RBrace}, {'{', CHCODE::C_LBrace},   {'}', CHCODE::C_RBrace},    {'<', CHCODE::C_LBrace},
-    {'>', CHCODE::C_RBrace}, {'?', CHCODE::C_Question}, {'*', CHCODE::C_Asterisk},  {'@', CHCODE::C_AtMark},
+    {'>', CHCODE::C_RBrace}, {'?', CHCODE::C_Question}, {'*', CHCODE::C_Dot},       {'@', CHCODE::C_AtMark},
     {'#', CHCODE::C_Sharp},  {'$', CHCODE::C_Dollar},   {'&', CHCODE::C_Ampersand}, {':', CHCODE::C_Colon},
-    {'_', CHCODE::C_Hyphen}, {';', CHCODE::C_Colon},
+    {'_', CHCODE::C_Hyphen}, {';', CHCODE::C_Colon},    {'.', CHCODE::C_Dot},       {',', CHCODE::C_Dot},
+    {'=', CHCODE::C_Hyphen},
 };
-const char decode_map[] = "0123456789-+/():abcdefghijklmnopqrstuvwxyz?+@#$&";
+const char decode_map[] = "0123456789-+/():abcdefghijklmnopqrstuvwxyz?.@#$&";
 
 uint64_t
 encode(const char* str)
