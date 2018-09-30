@@ -48,11 +48,29 @@ main(int argc, char* argv[])
   {
     if (argc > 2)
     {
-      uint64_t n1   = unpack_h64(argv[1]);
-      uint64_t n2   = unpack_h64(argv[2]);
-      auto     code = SimpleNumberEncode::add(n1, n2);
-      auto     ret  = SimpleNumberEncode::decode(code);
-      std::cout << "Add: " << ret << "/" << std::hex << code << std::dec << std::endl;
+      uint64_t n1  = unpack_h64(argv[1]);
+      uint64_t n2  = unpack_h64(argv[2]);
+      int      cmd = argc > 3 ? argv[3][0] : '+';
+
+      if (cmd == '-')
+      {
+        auto code = SimpleNumberEncode::sub(n1, n2);
+        auto ret  = SimpleNumberEncode::decode(code);
+        std::cout << "Sub: " << ret << "/" << std::hex << code << std::dec << std::endl;
+      }
+      else if (cmd == '=')
+      {
+        auto ret = SimpleNumberEncode::equal(n1, n2);
+        auto c1  = SimpleNumberEncode::decode(n1);
+        auto c2  = SimpleNumberEncode::decode(n2);
+        std::cout << "Equal: " << (ret ? "YES" : "NO") << "/" << c1 << " : " << c2 << std::endl;
+      }
+      else
+      {
+        auto code = SimpleNumberEncode::add(n1, n2);
+        auto ret  = SimpleNumberEncode::decode(code);
+        std::cout << "Add: " << ret << "/" << std::hex << code << std::dec << std::endl;
+      }
     }
     else
     {

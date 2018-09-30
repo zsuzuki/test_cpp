@@ -72,9 +72,30 @@ add(uint64_t a, uint64_t b)
 }
 
 //
+uint64_t
+sub(uint64_t a, uint64_t b)
+{
+  return encode(decode(a) - decode(b));
+}
+
+//
 bool
 equal(uint64_t a, uint64_t b)
 {
   return decode(a) == decode(b);
+}
+
+//
+bool
+greater(uint64_t a, uint64_t b)
+{
+  return decode(a) > decode(b);
+}
+
+//
+bool
+less(uint64_t a, uint64_t b)
+{
+  return decode(a) < decode(b);
 }
 } // namespace SimpleNumberEncode
