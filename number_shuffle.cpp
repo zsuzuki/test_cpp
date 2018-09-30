@@ -6,18 +6,20 @@
 #include <iostream>
 #include <random>
 
-using namespace std;
-
 namespace
 {
-uint64_t random_table[] = {
-    0x98316e0,  0xf0e784f,  0x1910061b, 0x170e1b8f, 0x3f5184c,  0x9428c8f,  0x10d06c89, 0x19dba286, 0x1ea63fa4, 0x12a1f311,
-    0x1a8213a6, 0x172560f2, 0x7c76d09,  0xca6c360,  0x33f7632,  0x1f02846e, 0x16525761, 0x17233a99, 0x416e239,  0x1387edbe,
-    0x9e110e1,  0x4c905a7,  0x1c4a76b0, 0x1f615f9e, 0xb5c021e,  0x3277d14,  0x2d594ac,  0xf20b046,  0x1ce04452, 0x15e5967e,
-    0x10b1c257, 0x1d0055f0, 0x14eb3218, 0x6074635,  0xa4ff10d,  0x46f1b2f,  0xf9d473e,  0xe097475,  0x15d5768,  0xd24e22a,
-    0x1573f8e9, 0xa9b8db4,  0x38a5b06,  0x525ace9,  0x1cbc44b5, 0x25c92d4,  0x1755896a, 0x5fb4221,  0x3d10299,  0xa985326,
-    0x1bb26595, 0x1637b3b2, 0x1cb0ae04, 0x281e420,  0x2c9acb0,  0xf0b05ee,  0x162098e7, 0x1ed0d60c, 0x45fd83a,  0x3998f45,
-    0xe87fca1,  0x1e76e3eb, 0x135bdb4a, 0x42a031e,
+const uint64_t random_table[] = {
+    0x07c667b4, 0x0113a0c7, 0x059e95d5, 0x00f8906b, 0x06c19c92, 0x0492616c, 0x03fd9fac, 0x00ff7ab4, 
+    0x0031a32e, 0x0451a094, 0x01cae570, 0x019abd2f, 0x07890755, 0x077483a3, 0x060b7bec, 0x0101b5e0, 
+    0x024a79dc, 0x05d5e211, 0x00d49adf, 0x002a9014, 0x001d4d7e, 0x047f0b48, 0x039ee552, 0x04bfbdac, 
+    0x03b96e2e, 0x07b19f81, 0x02c40a61, 0x056e07fe, 0x021ea4c0, 0x03d1bc1d, 0x02a5ac4c, 0x0577c6e4, 
+    0x02f7c379, 0x06265213, 0x055e1650, 0x0604c8b8, 0x011f571f, 0x070ee9e1, 0x00f2cef0, 0x0370582a, 
+    0x05cf36bb, 0x05f9f53f, 0x07151ca0, 0x074df9cc, 0x01789f63, 0x030db566, 0x039ec702, 0x021a7d48, 
+    0x00392787, 0x00db70b7, 0x04a295eb, 0x0469f5e7, 0x07bbfd19, 0x0263a38f, 0x077a6acd, 0x00d8a520, 
+    0x02988d2b, 0x007afa39, 0x02537ff7, 0x07b56de0, 0x073c78d5, 0x062edb6e, 0x04c5ea2b, 0x0573a839, 
+};
+std::array<const uint64_t, 32> shift_table = {
+    7, 8, 6, 12, 1, 24, 28, 20, 19, 0, 3, 13, 9, 2, 14, 10, 4, 5, 17, 29, 15, 16, 21, 22, 25, 11, 18, 27, 30, 23, 26, 31,
 };
 
 uint64_t
@@ -33,17 +35,14 @@ rotate(uint64_t n, uint64_t n_sh = 16)
 uint64_t
 encode(uint32_t num)
 {
-  static int shift_table[] = {
-      7, 8, 6, 12, 1, 24, 28, 20, 19, 0, 3, 13, 9, 2, 14, 10, 4, 5, 17, 29, 15, 16, 21, 22, 25, 11, 18, 27, 30, 23, 26, 31,
-  };
   static int shift_count = 0;
 
   uint64_t code = num;
-  auto     s    = shift_table[(shift_count + 1) % (sizeof(shift_table) / sizeof(int))];
+  auto     s    = shift_table[shift_count++ % shift_table.size()];
   code ^= random_table[s + 1];
   code *= random_table[s + 2];
   code = rotate(code, s);
-  code = ((code << 5) & 0xffffffff00000000) | (code & 0x07ffffff) | (s << (32 - 5));
+  code = ((code << 5) & 0xffffffff00000000ULL) | (code & 0x07ffffffULL) | (s << (32 - 5));
 
   return code;
 }
@@ -51,7 +50,7 @@ encode(uint32_t num)
 uint32_t
 decode(uint64_t code)
 {
-  uint64_t num = (code & 0x07ffffff) | ((code >> 5) & 0x07fffffff8000000);
+  uint64_t num = (code & 0x07ffffffULL) | ((code >> 5) & 0x07fffffff8000000ULL);
   uint64_t s   = (code >> (32 - 5)) & 31;
   num          = rotate(num, 59 - s);
   num /= random_table[s + 2];
@@ -73,35 +72,9 @@ main(int argc, char* argv[])
   for (auto b : base)
   {
     uint64_t num = b;
-    uint64_t s   = ((uint64_t)((double)rnd() / (double)(0x8000000)));
-    cout << "Original: ";
-    cout.width(10);
-    cout << num << "(rnd:";
-    cout.width(2);
-    cout << s << ") ";
-    cout << hex;
-    num ^= random_table[s + 1];
-    num *= random_table[s + 2];
-    num = rotate(num, s);
-    num = ((num << 5) & 0xffffffff00000000) | (num & 0x07ffffff) | (s << (32 - 5));
-    cout << "Result: ";
-    cout.width(16);
-    cout << num;
-    uint64_t r_num = (num & 0x07ffffff) | ((num >> 5) & 0x07fffffff8000000);
-    uint64_t r_s   = (num >> (32 - 5)) & 31;
-    r_num          = rotate(r_num, 59 - r_s);
-    r_num /= random_table[r_s + 2];
-    r_num ^= random_table[r_s + 1];
-    cout << dec;
-    cout << " Reverse:";
-    cout.width(10);
-    cout << r_num << "(" << r_s << ")" << endl;
-
-    {
-      auto code = encode(b);
-      auto ret  = decode(code);
-      std::cout << "C: " << b << "/" << ret << "/" << std::hex << code << std::dec << std::endl;
-    }
+    auto code = encode(b);
+    auto ret  = decode(code);
+    std::cout << "C: " << b << "/" << ret << "/" << std::hex << code << std::dec << std::endl;
   }
 }
 // End
