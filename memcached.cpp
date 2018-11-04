@@ -1,8 +1,7 @@
 //
 // memcached 接続テスト
 //
-#include <stdio.h>
-
+#include <cstring>
 #include <string>
 #include <unistd.h>
 
