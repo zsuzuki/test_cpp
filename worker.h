@@ -22,35 +22,33 @@ private:
   public:
     virtual ~Worker()  = default;
     virtual void run() = 0;
-
-    virtual work_size_t getNextBuffer() const = 0;
   };
 
   //
-  bool                     enabled{true};
+  std::atomic_bool         enabled{true};
   std::atomic_int          launch{0};
+  std::atomic_int          exec_count{0};
   std::vector<uint8_t>     buffer;
-  atomic_work_size_t       index{0};
-  atomic_work_size_t       free_index{0};
-  std::atomic_bool         buffer_full{false};
+  atomic_work_size_t       buffer_index{0};
   Queue<Worker>            queue;
   std::vector<std::thread> thread_list;
 
   // スレッド本体
-  void execute(int index)
+  void execute()
   {
     launch++;
-    int count = 0;
     do
     {
       auto* p = queue.pop();
       if (p)
       {
+        exec_count++;
         p->run();
-        free_index = p->getNextBuffer();
-        if (free_index != index)
-          buffer_full = false;
-        count++;
+        --exec_count;
+      }
+      else
+      {
+        std::this_thread::sleep_for(std::chrono::microseconds(0));
       }
     } while (enabled);
   }
@@ -58,34 +56,19 @@ private:
   // ワーカー用メモリ確保
   std::pair<void*, work_size_t> alloc(size_t sz)
   {
-    work_size_t next, target = index;
-    while (buffer_full)
-      ;
+    work_size_t next, cidx;
     do
     {
-      next = target + sz;
-      if (target >= free_index)
+      cidx = buffer_index;
+      next = cidx + sz;
+      if (next > buffer.size())
       {
-        if (next > buffer.size())
-        {
-          while (sz > free_index)
-            ;
-          next = sz;
-        }
+        // no memory
+        return std::make_pair(nullptr, 0);
       }
-      else
-      {
-        while (next > free_index)
-          ;
-      }
-    } while (index.compare_exchange_weak(target, next) == false);
+    } while (buffer_index.compare_exchange_weak(cidx, next) == false);
 
-    if (target > next)
-      target = 0;
-    if (next == free_index)
-      buffer_full = true;
-
-    auto buff = reinterpret_cast<void*>(&buffer[target]);
+    auto buff = reinterpret_cast<void*>(&buffer[cidx]);
     return std::make_pair(buff, next);
   }
 
@@ -100,14 +83,14 @@ private:
   }
 
 public:
-  WorkerThread(size_t bsz = 200) : queue(bsz / 32)
+  WorkerThread(size_t bsz = 4096) : queue(bsz / 32)
   {
     auto max_th = std::max(1U, std::thread::hardware_concurrency() - 1);
     thread_list.resize(max_th);
     for (int id = 0; id < max_th; id++)
     {
       auto& th = thread_list[id];
-      th       = std::thread([&, id] { execute(id); });
+      th       = std::thread([&] { execute(); });
     }
 
     buffer.resize(bsz);
@@ -124,41 +107,50 @@ public:
     }
   }
 
+  // 全てのワーカーが終了しているか
+  bool checkComplete() const { return exec_count == 0 && queue.empty(); }
+
   // 登録実行(引数付き)
   template <typename F, typename A>
-  void push(F f, A a)
+  bool push(F f, A a)
   {
     class m : public Worker
     {
-      F           func;
-      A           arg;
-      work_size_t next;
+      F func;
+      A arg;
 
     public:
-      m(F f, A a, work_size_t n) : func(f), arg(a), next(n) {}
+      m(F f, A a) : func(f), arg(a) {}
       ~m() override = default;
-      void        run() override { func(arg); }
-      work_size_t getNextBuffer() const override { return next; }
+      void run() override { func(arg); }
     };
     auto r = alloc(sizeof(m));
-    add(new (r.first) m{f, a, r.second});
+    if (r.first)
+    {
+      add(new (r.first) m{f, a});
+      return true;
+    }
+    return false;
   }
   // 登録実行(引数無し)
   template <typename F>
-  void push(F f)
+  bool push(F f)
   {
     class m : public Worker
     {
-      F           func;
-      work_size_t next;
+      F func;
 
     public:
-      m(F f, work_size_t n) : func(f), next(n) {}
+      m(F f) : func(f) {}
       ~m() override = default;
-      void        run() override { func(); }
-      work_size_t getNextBuffer() const override { return next; }
+      void run() override { func(); }
     };
     auto r = alloc(sizeof(m));
-    add(new (r.first) m{f, r.second});
+    if (r.first)
+    {
+      add(new (r.first) m{f});
+      return true;
+    }
+    return false;
   }
 };

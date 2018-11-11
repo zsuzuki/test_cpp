@@ -58,15 +58,19 @@ main()
             th.push([i] { printf("chain job %d\n", i); });
           },
           i / 10);
-      printf("ten counter\n");
+
+      printf("ten counter %s\n", th.checkComplete() ? "Complete" : "Execute");
     }
     else if (i & 1)
       th.push([i]() { printf("odd : %d\n", i); });
     else
       th.push([i]() { printf("even: %d\n", i); });
   }
+  int w = 0;
+  while (th.checkComplete() == false)
+    w++;
 
-  printf("result:%d/%d\n", t.get(), c);
+  printf("result:%d/%d wait=%d\n", t.get(), c, w);
 
   printf("Good-bye.\n");
   return 0;
