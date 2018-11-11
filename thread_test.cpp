@@ -70,7 +70,13 @@ main()
   while (th.checkComplete() == false)
     w++;
 
+  th.clear();
+  th.push([]() { printf("last execute\n"); });
+
   printf("result:%d/%d wait=%d\n", t.get(), c, w);
+
+  while (th.checkComplete() == false)
+    ;
 
   printf("Good-bye.\n");
   return 0;

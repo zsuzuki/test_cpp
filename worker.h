@@ -107,6 +107,9 @@ public:
     }
   }
 
+  // ワーカーをもう一度使えるようにする(checkCompleteで確認した後に呼ぶ)
+  void clear() { buffer_index = 0; }
+
   // 全てのワーカーが終了しているか
   bool checkComplete() const { return exec_count == 0 && queue.empty(); }
 
