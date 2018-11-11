@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 enable_language(CXX)
-set(CMAKE_CXX_FLAGS "-std=c++14 -Wall")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+include_directories(/usr/local/include inc)
+link_directories(/usr/local/lib)
 
 ##
 project(string)
@@ -27,3 +31,11 @@ add_executable(functioncall ${funccall_src})
 project(memcached)
 set(memcached_src memcached.cpp)
 add_executable(memcached ${memcached_src})
+##
+project(worker)
+set(worker_src thread_test.cpp)
+add_executable(worker ${worker_src})
+##
+project(queue)
+set(queue_src queue.cpp)
+add_executable(queue ${queue_src})
