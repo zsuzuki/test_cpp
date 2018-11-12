@@ -44,3 +44,17 @@ target_link_libraries(worker pthread)
 project(queue)
 set(queue_src queue.cpp)
 add_executable(queue ${queue_src})
+##
+project(game)
+add_custom_command (
+  OUTPUT
+    ${PROJECT_SOURCE_DIR}/game_struct.hpp
+  COMMAND structbuilder
+    -hpp ${PROJECT_SOURCE_DIR}/game_struct.hpp
+    ${PROJECT_SOURCE_DIR}/struct.toml
+  MAIN_DEPENDENCY ${PROJECT_SOURCE_DIR}/struct.toml)
+set(game_src game_test.cpp)
+add_executable(game ${game_src})
+add_custom_target(generate_gamestruct DEPENDS ${PROJECT_SOURCE_DIR}/game_struct.hpp)
+add_dependencies(game generate_gamestruct)
+target_link_libraries(game pthread)

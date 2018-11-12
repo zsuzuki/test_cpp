@@ -59,7 +59,7 @@ main()
           },
           i / 10);
 
-      printf("ten counter %s\n", th.checkComplete() ? "Complete" : "Execute");
+      printf("ten[%d] counter %s\n", i, th.checkComplete() ? "Complete" : "Execute");
     }
     else if (i & 1)
       th.push([i]() { printf("odd : %d\n", i); });
