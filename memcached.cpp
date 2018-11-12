@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 #include <unistd.h>
+#include <cstdio>
 
 #include <arpa/inet.h>
 #include <netdb.h>
