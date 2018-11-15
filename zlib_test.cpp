@@ -13,18 +13,6 @@
 
 namespace
 {
-unsigned char msg[] = "Hello,World\n"
-                      "My name is POPOPOPO.\n"
-                      "私の名前は中野です\n"
-                      "play for futsal on today.\n"
-                      "take your picture\n"
-                      "明日は明日の風が吹く\n"
-                      "convert on server\n"
-                      "put on your mark\n"
-                      "get set\n"
-                      "ready\n"
-                      "go";
-
 class zinp : public ZLIB::input
 {
 public:
