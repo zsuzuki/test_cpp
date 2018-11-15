@@ -120,7 +120,7 @@ main(int argc, char** argv)
 
   std::array<Bytef, 4096> obuffer;
 
-  ZLIB::zlib zlib;
+  ZLIB::zlib zlib{uncompress};
   zinp::buff isrc{ibuffer}, idst{obuffer};
   zinp       zi{isrc, idst, ofs};
   if (uncompress)

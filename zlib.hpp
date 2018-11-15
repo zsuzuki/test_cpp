@@ -29,11 +29,21 @@ public:
 class zlib
 {
   z_stream z;
-  size_t   work_size = 0;
+
+  std::vector<Bytef> work_buffer;
+  size_t             work_size;
 
   static zlib* toself(void* opq) { return reinterpret_cast<zlib*>(opq); }
 
-  void reset() { work_size = 0; }
+  void  reset() { work_size = work_buffer.size(); }
+  void* alloc(size_t sz)
+  {
+    if (work_size < sz)
+      return nullptr;
+    work_size -= sz;
+    return &work_buffer[work_size];
+  }
+
   //
   template <typename F>
   size_t mainloop(input& inp, F func)
@@ -73,15 +83,17 @@ class zlib
   }
 
 public:
-  zlib()
+  zlib(bool mini = false)
   {
+    work_size = mini ? 64_KB : 3 * 128_KB;
+    work_buffer.resize(work_size);
+
     z.zalloc = [](auto opq, auto items, auto nb) {
       auto*  self = toself(opq);
       size_t sz   = items * nb;
-      self->work_size += sz;
-      return malloc(sz);
+      return self->alloc(sz);
     };
-    z.zfree  = [](auto, auto ptr) { free(ptr); };
+    z.zfree  = [](auto, auto) {};
     z.opaque = this;
   }
   ~zlib() = default;
