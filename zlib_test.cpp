@@ -2,12 +2,15 @@
 //
 //
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <vector>
+#include <array>
 #include <cstdint>
-#include <zlib.h>
+#include <iostream>
+#include <string>
 
+#include "zlib.hpp"
+
+namespace
+{
 unsigned char msg[] = "Hello,World\n"
                       "My name is POPOPOPO.\n"
                       "私の名前は中野です\n"
@@ -20,63 +23,78 @@ unsigned char msg[] = "Hello,World\n"
                       "ready\n"
                       "go";
 
-unsigned char buffer[1024];
-unsigned char outbuffer[1024];
-
-class worker
+class zinp : public ZLIB::input
 {
-  std::vector<uint8_t> buffer;
-  size_t               size;
+public:
+  struct buff
+  {
+    Bytef* ptr;
+    size_t sz;
+
+    buff() {}
+    buff(const buff& b)
+    {
+      ptr = b.ptr;
+      sz  = b.sz;
+    }
+    buff(Bytef* b, size_t s) : ptr(b), sz(s) {}
+    template <class T>
+    buff(T& v)
+    {
+      ptr = v.data();
+      sz  = v.size();
+    }
+
+    void update(size_t s)
+    {
+      ptr += s;
+      sz -= s;
+    }
+  };
+
+private:
+  buff src;
+  buff dst;
 
 public:
-  worker(size_t sz)
+  zinp(const buff& i, const buff& o) : src(i), dst(o) {}
+  void*  getSource() override { return src.ptr; }
+  void*  getDestination() override { return dst.ptr; }
+  size_t getRemainSize() const override { return src.sz; }
+  size_t getWritableSize() const override { return dst.sz; }
+  bool   runOut(size_t rsize, size_t wsize) override
   {
-    buffer.resize(sz);
-    size = sz;
+    src.update(rsize);
+    dst.update(wsize);
+    std::cout << "read: " << rsize << ", write: " << wsize << std::endl;
+    return src.sz == 0;
   }
-  void* alloc(size_t sz)
-  {
-    size -= sz;
-    printf("allocate: %zu - %zu\n", size, sz);
-    return &buffer[size];
-  }
-  void free(void*) {}
+  void complete(bool ok, size_t tws) override { std::cout << "write: " << tws << std::endl; }
+  void error() override { std::cerr << "error!" << std::endl; }
 };
+} // namespace
 
+//
 int
 main(int argc, char** argv)
 {
-#if __cplusplus > 199711L || _MSC_VER >= 1900
-  printf("new c++ version: %ld\n", __cplusplus);
-#endif
-  worker   w(400 * 1024);
-  z_stream z;
-  z.zalloc    = [](auto opq, auto items, auto sz) { return reinterpret_cast<worker*>(opq)->alloc(items * sz); };
-  z.zfree     = [](auto opq, auto ptr) { reinterpret_cast<worker*>(opq)->free(ptr); };
-  z.opaque    = &w;
-  z.next_in   = msg;
-  z.avail_in  = sizeof(msg);
-  z.next_out  = buffer;
-  z.avail_out = sizeof(buffer);
+  using Buffer = std::array<Bytef, 1024>;
+  Buffer     buffer;
+  Buffer     testbuff;
+  ZLIB::zlib zlib;
+  zinp::buff isrc{msg, sizeof(msg)}, idst{buffer};
+  zinp       zi{isrc, idst};
+  zlib.compress(zi);
+  std::cout << "deflate work-size: " << zlib.getWorkSize() << std::endl;
 
-  deflateInit2(&z, Z_DEFAULT_COMPRESSION, Z_DEFLATED, MAX_WBITS, 8, Z_DEFAULT_STRATEGY);
-  // deflateInit(&z, Z_DEFAULT_COMPRESSION);
-  deflate(&z, Z_FINISH);
-  deflateEnd(&z);
-  printf("size: %zu/%zu\n", sizeof(buffer) - z.avail_out, sizeof(msg));
+  zinp::buff osrc{buffer}, odst{testbuff};
+  zinp       zo{osrc, odst};
+  zlib.uncompress(zo);
+  std::cout << "inflate work-size: " << zlib.getWorkSize() << std::endl;
 
-  z.next_in   = buffer;
-  z.avail_in  = sizeof(buffer);
-  z.next_out  = outbuffer;
-  z.avail_out = sizeof(outbuffer);
-  // inflateInit(&z);
-  inflateInit2(&z, MAX_WBITS);
-  inflate(&z, Z_FINISH);
-  inflateEnd(&z);
+  std::cout << testbuff.data() << std::endl;
+  std::cout << "done." << std::endl;
 
-  printf("msg(%d):\n%s\n", z.avail_in, outbuffer);
-
-  printf("\ndone.\n");
   return 0;
 }
 //
