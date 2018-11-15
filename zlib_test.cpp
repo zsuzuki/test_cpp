@@ -27,7 +27,6 @@ public:
       ptr = b.ptr;
       sz  = b.sz;
     }
-    buff(Bytef* b, size_t s) : ptr(b), sz(s) {}
     template <class T>
     buff(T& v)
     {
@@ -43,22 +42,28 @@ public:
   };
 
 private:
-  buff   src;
-  buff   dst;
-  size_t wsz;
+  buff           src;
+  buff           dst;
+  size_t         wsz;
+  std::ofstream& ofstream;
 
 public:
-  zinp(const buff& i, const buff& o) : src(i), dst(o), wsz(0) {}
+  zinp(const buff& i, const buff& o, std::ofstream& ofs) : src(i), dst(o), wsz(0), ofstream(ofs) {}
   void*  getSource() override { return src.ptr; }
   void*  getDestination() override { return dst.ptr; }
   size_t getRemainSize() const override { return src.sz; }
   size_t getWritableSize() const override { return dst.sz; }
   bool   runOut(size_t rsize, size_t wsize) override
   {
+    ofstream.write((char*)dst.ptr, wsize);
     src.update(rsize);
-    dst.update(wsize);
     std::cout << "read: " << rsize << ", write: " << wsize << std::endl;
     return src.sz == 0;
+  }
+  void flush(size_t wsize) override
+  {
+    ofstream.write((char*)dst.ptr, wsize);
+    std::cout << "flush: " << wsize << std::endl;
   }
   void complete(bool ok, size_t tws) override
   {
@@ -113,18 +118,16 @@ main(int argc, char** argv)
   ibuffer.resize(isz);
   ifs.read((char*)ibuffer.data(), ibuffer.size());
 
-  std::vector<Bytef> obuffer;
-  obuffer.resize(isz * 4);
+  std::array<Bytef, 4096> obuffer;
 
   ZLIB::zlib zlib;
   zinp::buff isrc{ibuffer}, idst{obuffer};
-  zinp       zi{isrc, idst};
+  zinp       zi{isrc, idst, ofs};
   if (uncompress)
     zlib.uncompress(zi);
   else
     zlib.compress(zi);
   std::cout << "work-size: " << zlib.getWorkSize() << std::endl;
-  ofs.write((char*)obuffer.data(), zi.getTotalSize());
 
   return 0;
 }

@@ -9,7 +9,7 @@
 
 namespace ZLIB
 {
-constexpr size_t operator"" _MB(unsigned long long n) { return n * 1024 * 1024; }
+constexpr size_t operator"" _KB(unsigned long long n) { return n * 1024; }
 
 class input
 {
@@ -21,6 +21,7 @@ public:
   //
   virtual bool runOut(size_t read_size, size_t write_size) = 0;
   virtual void complete(bool ok, size_t write_size)        = 0;
+  virtual void flush(size_t remain_write_size)             = 0;
   //
   virtual void error() = 0;
 };
@@ -54,7 +55,10 @@ class zlib
       total_write += write_size;
 
       if (r == Z_STREAM_END)
+      {
+        inp.flush(write_size);
         break;
+      }
       if (r == Z_STREAM_ERROR)
       {
         // error
