@@ -1,7 +1,6 @@
 //
 // threadテスト
 //
-#include "atomic_queue.h"
 #include "worker.h"
 #include <algorithm>
 #include <atomic>
@@ -41,21 +40,25 @@ main()
 
   WorkerThread th;
 
+  std::atomic_int cnt{11};
+
   printf("threads: %d\n", std::thread::hardware_concurrency());
   th.push([](const char* p) { printf("%s\n", p); }, "worker one.");
   th.push([](int n) { printf("%d\n", n); }, 9);
   th.push([](const T& t) { printf("%d/%d\n", t.a, t.b); }, T());
   th.push([&]() { printf("lambda:%d,%d\n", b, c); });
   c = a + b;
+  th.push(cnt, []() { printf("wait counter:\n"); });
 
   for (int i = 0; i <= 100; ++i)
   {
     if ((i % 10) == 0)
     {
       th.push(
-          [i, &th](int d) {
+          [i, &th, &cnt](int d) {
             printf("ten : %d %d\n", d, i);
             th.push([i] { printf("chain job %d\n", i); });
+            --cnt;
           },
           i / 10);
 

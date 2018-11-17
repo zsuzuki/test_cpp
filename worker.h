@@ -15,13 +15,23 @@ private:
   //
   using work_size_t        = uint16_t;
   using atomic_work_size_t = std::atomic<work_size_t>;
+  using count_t            = std::atomic_int;
 
   // ワーカー
   class Worker
   {
   public:
-    virtual ~Worker()  = default;
-    virtual void run() = 0;
+    virtual ~Worker()      = default;
+    virtual void     run() = 0;
+    virtual count_t* getCounter() { return nullptr; }
+  };
+  class CWorker : public Worker
+  {
+    count_t& count;
+
+  public:
+    CWorker(count_t& c) : count(c) {}
+    count_t* getCounter() override { return &count; }
   };
 
   //
@@ -42,9 +52,17 @@ private:
       auto* p = queue.pop();
       if (p)
       {
-        exec_count++;
-        p->run();
-        --exec_count;
+        auto* c = p->getCounter();
+        if (c == nullptr || *c <= 0)
+        {
+          exec_count++;
+          p->run();
+          --exec_count;
+        }
+        else
+        {
+          add(p);
+        }
       }
       else
       {
@@ -80,6 +98,19 @@ private:
     {
       loop = !queue.push(w);
     } while (loop);
+  }
+
+  // ワーカー生成
+  template <typename F>
+  bool registerWorker(size_t sz, F func)
+  {
+    auto r = alloc(sz);
+    if (r.first)
+    {
+      add(func(r.first));
+      return true;
+    }
+    return false;
   }
 
 public:
@@ -124,16 +155,23 @@ public:
 
     public:
       m(F f, A a) : func(f), arg(a) {}
-      ~m() override = default;
       void run() override { func(arg); }
     };
-    auto r = alloc(sizeof(m));
-    if (r.first)
+    return registerWorker(sizeof(m), [&](auto* p) { return new (p) m{f, a}; });
+  }
+  template <typename F, typename A>
+  bool push(count_t& c, F f, A a)
+  {
+    class m : public CWorker
     {
-      add(new (r.first) m{f, a});
-      return true;
-    }
-    return false;
+      F func;
+      A arg;
+
+    public:
+      m(count_t& c, F f, A a) : CWorker(c), func(f), arg(a) {}
+      void run() override { func(arg); }
+    };
+    return registerWorker(sizeof(m), [&](auto* p) { return new (p) m{c, f, a}; });
   }
   // 登録実行(引数無し)
   template <typename F>
@@ -145,15 +183,21 @@ public:
 
     public:
       m(F f) : func(f) {}
-      ~m() override = default;
       void run() override { func(); }
     };
-    auto r = alloc(sizeof(m));
-    if (r.first)
+    return registerWorker(sizeof(m), [&](auto* p) { return new (p) m{f}; });
+  }
+  template <typename F>
+  bool push(count_t& c, F f)
+  {
+    class m : public CWorker
     {
-      add(new (r.first) m{f});
-      return true;
-    }
-    return false;
+      F func;
+
+    public:
+      m(count_t& c, F f) : CWorker(c), func(f) {}
+      void run() override { func(); }
+    };
+    return registerWorker(sizeof(m), [&](auto* p) { return new (p) m{c, f}; });
   }
 };
