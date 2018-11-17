@@ -73,8 +73,8 @@ public:
     setExp(0);
     setLife(100);
     setAttack(10);
-    setDefence(5);
-    setAgility(1);
+    setDefence(7);
+    setAgility(5);
   }
   //
   bool operator == (const Player& other) const {
