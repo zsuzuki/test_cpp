@@ -2,147 +2,219 @@
 #include "game_struct.hpp"
 #include "worker.h"
 
+#include <array>
 #include <iostream>
 #include <mutex>
 #include <random>
 
-namespace {
-std::random_device seed_gen;
-std::mt19937 l_rand{seed_gen()};
+namespace
+{
+std::random_device         seed_gen;
+std::mt19937               l_rand{seed_gen()};
 std::normal_distribution<> dist(1.0, 0.4);
 
 constexpr size_t NB_PLAYERS = 10;
-std::array<const char*,NB_PLAYERS> name_list = {
-    "Suzuki", "Satou", "Watanabe", "Takahashi", "Itou",
-    "Tanaka", "Yamada", "Yamamoto", "Nakamura", "Kobayashi"
-};
+
+using NameList     = std::array<const char*, NB_PLAYERS>;
+NameList name_list = {"Suzuki", "Satou",  "Watanabe", "Takahashi", "Itou",
+                      "Tanaka", "Yamada", "Yamamoto", "Nakamura",  "Kobayashi"};
 
 constexpr size_t MAX_LEVEL = 50;
 std::vector<int> exp_list;
-void build_exp_list()
+// 経験値リストの作成
+void
+build_exp_list()
 {
-    float need_exp = 10.0;
-    for (size_t i = 0; i < MAX_LEVEL; i++)
+  float need_exp = 10.0;
+  for (size_t i = 0; i < MAX_LEVEL; i++)
+  {
+    exp_list.push_back(need_exp);
+    auto n = need_exp * 1.2f;
+    if (n > 1000)
+      n = 1000 + need_exp * 0.1f;
+    need_exp += n;
+  }
+}
+
+// 適当なステータス配分
+void
+status_alloc(Game::Player& player, int num)
+{
+  while (num > 0)
+  {
+    int n = num <= 2 ? 1 : l_rand() % (num > 5 ? num / 2 : num);
+    num -= n;
+    switch (l_rand() & 3)
     {
-        exp_list.push_back(need_exp);
-        auto n = need_exp * 1.2f;
-        if (n > 1000)
-            n = 1000 + need_exp * 0.1f;
-        need_exp += n;
+    case 0:
+      player.setAttack(player.getAttack() + n);
+      break;
+    case 1:
+      player.setDefence(player.getDefence() + n);
+      break;
+    case 2:
+      player.setAgility(player.getAgility() + n);
+      break;
+    case 3:
+      player.setLife(player.getLife() + n * 2);
+      break;
     }
+  }
+  std::cout << player.getName() << ":\n  Life:" << player.getHp() << "/" << player.getLife() << ", Attack: " << player.getAttack()
+            << ", Defence: " << player.getDefence() << ", Agility: " << player.getAgility() << std::endl;
 }
 
-void status_alloc(Game::Player& player, int num)
+// 回復
+void
+healing(Game::Player& p)
 {
-    while (num > 0)
+  int nb_heal = p.getHealing();
+  if (nb_heal > 0)
+  {
+    int hp     = rand() % 25 + 50 + p.getHp();
+    int max_hp = p.getLife();
+    p.setHp(max_hp < hp ? max_hp : hp);
+    --nb_heal;
+    std::cout << "healing: " << p.getName() << " -> " << p.getHp() << "(" << nb_heal << ")" << std::endl;
+    p.setHealing(nb_heal);
+  }
+}
+
+// レベルアップチェック
+void
+check_levelup(Game::Player& p)
+{
+  auto lv       = p.getLevel();
+  auto need_exp = exp_list[lv - 1];
+  if (need_exp < p.getExp())
+  {
+    lv++;
+    std::cout << "Level up! <" << p.getName() << ">: level " << lv << std::endl;
+    p.setLevel(lv);
+    p.setHealing(p.getHealing() + 1);
+    status_alloc(p, 8);
+  }
+}
+
+// 戦闘
+void
+battle(Game::Player& player1, Game::Player& player2)
+{
+  if (player1.getHp() == 0 || player2.getHp() == 0)
+    return;
+
+  auto hit = [](auto& p1, auto& p2) {
+    double ag1 = p1.getAgility(), ag2 = p2.getAgility();
+    double hr = ag1 * dist(l_rand) * 2.0 - ag2 * dist(l_rand);
+    if (hr > 0.0)
     {
-        int n = num <= 2 ? 1 : l_rand() % (num > 5 ? num / 2 : num);
-        num -= n;
-        switch (l_rand() & 3)
-        {
-        case 0:
-            player.setAttack(player.getAttack() + n);
-            break;
-        case 1:
-            player.setDefence(player.getDefence() + n);
-            break;
-        case 2:
-            player.setAgility(player.getAgility() + n);
-            break;
-        case 3:
-            player.setLife(player.getLife() + n * 2);
-            break;
-        }
+      double at = p1.getAttack();
+      double df = p2.getDefence();
+      at *= dist(l_rand) + sqrtf(hr) * 0.3;
+      df *= dist(l_rand);
+      auto           life   = p2.getHp();
+      decltype(life) damage = (at - df) * 0.4;
+      if (life <= damage)
+      {
+        damage = life;
+        std::cout << "dead: " << p2.getName() << std::endl;
+      }
+      auto new_hp = life - damage;
+      p2.setHp(new_hp);
+      auto ldiff = p2.getLife() - new_hp;
+      if (new_hp > 0 && (new_hp < 60 || ldiff > 75))
+        healing(p2);
+      p1.setExp(p1.getExp() + damage / 2);
+      check_levelup(p1);
+      return new_hp > 0;
     }
-    std::cout << player.getName() << ":\n  Life:" << player.getLife() << ", Attack: " << player.getAttack()
-                  << ", Defence: " << player.getDefence() << ", Agility: " << player.getAgility() << std::endl;
+    return true;
+  };
+
+  double a1 = player1.getAgility();
+  double a2 = player2.getAgility();
+  if (a1 * dist(l_rand) > a2 * dist(l_rand))
+  {
+    if (hit(player1, player2))
+      hit(player2, player1);
+  }
+  else
+  {
+    if (hit(player2, player1))
+      hit(player1, player2);
+  }
+  player1.setNbBattle(player1.getNbBattle() + 1);
+  player2.setNbBattle(player2.getNbBattle() + 1);
 }
 
-void check_levelup(Game::Player& p)
-{
-    auto lv = p.getLevel();
-    auto need_exp = exp_list[lv - 1];
-    if (need_exp < p.getExp())
-    {
-        lv++;
-        std::cout << "Level up! <" << p.getName() << ">: level " << lv << std::endl;
-        p.setLevel(lv);
-        status_alloc(p, 8);
-    }
-}
+} // namespace
 
-void battle(Game::Player& player1, Game::Player& player2)
-{
-    if (player1.getLife() == 0 || player2.getLife() == 0)
-        return;
-
-    auto hit = [](auto& p1, auto& p2) {
-        double ag1 = p1.getAgility(), ag2 = p2.getAgility();
-        double hr = ag1 * dist(l_rand) * 2.0 - ag2 * dist(l_rand);
-        if (hr > 0.0)
-        {
-            double at = p1.getAttack();
-            double df = p2.getDefence();
-            at *= dist(l_rand) + sqrtf(hr) * 0.5;
-            df *= dist(l_rand);
-            auto life = p2.getLife();
-            decltype(life) damage = (at - df) * 0.5;
-            if (life <= damage)
-            {
-                damage = life;
-                std::cout << "dead: " << p2.getName() << std::endl;
-            }
-            p2.setLife(life - damage);
-            p1.setExp(p1.getExp() + damage / 2);
-            check_levelup(p1);
-        }
-    };
-    // std::cout << "Battle: " << player1.getName() << " vs " << player2.getName() << std::endl;
-    hit(player1, player2);
-    hit(player2, player1);
-}
-
-}
-
+//
+//
+//
 int
-main(int argc,char** argv)
+main(int argc, char** argv)
 {
-    WorkerThread wt;
-    build_exp_list();
+  WorkerThread wt;
+  build_exp_list();
 
-    std::vector<Game::Player> pl_list;
-    pl_list.resize(NB_PLAYERS);
-    for (int i = 0; i < pl_list.size(); i++)
-    {
-        auto& pl = pl_list[i];
-        pl.setId(i + 1);
-        pl.setName(name_list[i % name_list.size()]);
-        status_alloc(pl,15);
-    }
+  std::vector<Game::Player> pl_list;
+  pl_list.resize(NB_PLAYERS);
+  for (int i = 0; i < pl_list.size(); i++)
+  {
+    // プレイヤー生成
+    auto& pl = pl_list[i];
+    pl.setId(i + 1);
+    pl.setName(name_list[i % name_list.size()]);
+    pl.setHp(pl.getLife());
+    status_alloc(pl, 15);
+  }
 
-    for (int i = 0; i < 1000; i++)
+  std::vector<int> pl_ids;
+  pl_ids.resize(pl_list.size());
+  std::iota(pl_ids.begin(), pl_ids.end(), 0);
+  std::shuffle(pl_ids.begin(), pl_ids.end(), l_rand);
+  for (int i = 0; i < 1000; i++)
+  {
+    int lcnt = 0;
+    for (int pi = 0; pi < pl_ids.size() / 2; pi++)
     {
-        int i1, i2;
-        do
-        {
-            i1 = l_rand() % NB_PLAYERS;
-            i2 = l_rand() % NB_PLAYERS;
-        } while (i1 == i2);
-        auto& p1 = pl_list[i1];
-        auto& p2 = pl_list[i2];
-        battle(p1, p2);
+      int   i1 = pl_ids[pi * 2];
+      int   i2 = pl_ids[pi * 2 + 1];
+      auto& p1 = pl_list[i1];
+      auto& p2 = pl_list[i2];
+      battle(p1, p2);
+      if (p1.getHp() > 0)
+        pl_ids[lcnt++] = i1;
+      if (p2.getHp() > 0)
+        pl_ids[lcnt++] = i2;
     }
-    std::mutex m;
-    for (auto& pl : pl_list) 
+    if (pl_ids.size() & 1)
     {
-        wt.push([&m](auto* player) {
-            m.lock();
-            std::cout << player->getName() << "," << player->getId() << ": " << player->getLife()
-                      << " exp: " << player->getExp() << std::endl;
-            m.unlock();
-        }, &pl);
+      pl_ids[lcnt++] = pl_ids[pl_ids.size() - 1];
     }
-    while (wt.checkComplete() == false)
-        std::this_thread::sleep_for(std::chrono::microseconds(1));
-    return 0;
+    if (lcnt == 1)
+    {
+      std::cout << "[" << i << "] survive only one." << std::endl;
+      break;
+    }
+    pl_ids.resize(lcnt);
+    std::shuffle(pl_ids.begin(), pl_ids.end(), l_rand);
+  }
+  std::mutex m;
+  for (auto& pl : pl_list)
+  {
+    wt.push(
+        [&m](auto* player) {
+          auto is_dead = [&]() -> const char* { return player->getHp() > 0 ? "LIVE" : "DEAD"; };
+          m.lock();
+          std::cout << player->getName() << ", Lv:" << player->getLevel() << ": " << is_dead()
+                    << " battle: " << player->getNbBattle() << " exp: " << player->getExp() << std::endl;
+          m.unlock();
+        },
+        &pl);
+  }
+  while (wt.checkComplete() == false)
+    std::this_thread::sleep_for(std::chrono::microseconds(1));
+  return 0;
 }

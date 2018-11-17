@@ -19,6 +19,10 @@ name = "exp"
 type = "uint32_t"
 initial = 0
 [[member]]
+name = "nb_battle"
+type= "uint32_t"
+initial = 0
+[[member]]
 name = "pos"
 type = "Position"
     [[member.Position]]
@@ -34,6 +38,16 @@ name = "life"
 type = "bit-unsigned"
 bits = 10
 initial = 100
+[[member]]
+name = "hp"
+type = "bit-unsigned"
+bits = 10
+initial = 100
+[[member]]
+name = "healing"
+type = "bit-unsigned"
+bits = 4
+initial = 9
 [[member]]
 name = "attack"
 type = "bit-unsigned"
