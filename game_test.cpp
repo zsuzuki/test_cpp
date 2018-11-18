@@ -4,10 +4,10 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <iostream>
 #include <mutex>
 #include <random>
-#include <chrono>
 
 namespace
 {
@@ -159,19 +159,19 @@ main(int argc, char** argv)
 {
   WorkerThread wt;
   // ワーカーがすべて終了するまで待つ
-  auto wait = [&wt](){
+  auto wait = [&wt]() {
     using namespace std::chrono;
     auto s = steady_clock::now();
     while (wt.checkComplete() == false)
     {
-        std::this_thread::sleep_for(microseconds(0));
-        auto e = steady_clock::now();
-        auto et = duration_cast<seconds>(e - s);
-        if (et.count() > 1)
-        {
-            std::cout << "Time out!" << std::endl;
-            return false;
-        }
+      std::this_thread::sleep_for(microseconds(0));
+      auto e  = steady_clock::now();
+      auto et = duration_cast<seconds>(e - s);
+      if (et.count() > 1)
+      {
+        std::cout << "Time out!" << std::endl;
+        return false;
+      }
     }
     return true;
   };
@@ -193,7 +193,7 @@ main(int argc, char** argv)
   std::vector<int> pl_ids, tmp_ids;
   pl_ids.resize(pl_list.size());
   tmp_ids.reserve(pl_list.size());
-  Queue<int> pl_que{pl_list.size()*2};
+  Queue<int> pl_que{pl_list.size() * 2};
 
   // 戦闘ループ
   std::iota(pl_ids.begin(), pl_ids.end(), 0);
@@ -202,47 +202,48 @@ main(int argc, char** argv)
   {
     std::atomic_int ecnt{(int)pl_ids.size() / 2};
     wt.clear();
-    std::mutex m;
     // 最後に実行するものを待たせておく
-    wt.push(ecnt,[&](){
-        // 生き残りリストをシャッフルする
-        if (pl_ids.size() & 1)
-          pl_que.push(&pl_ids[pl_ids.size() - 1]);
-        else if (pl_que.empty())
-            return;
-        tmp_ids.resize(0);
-        while (int* id = pl_que.pop())
-            tmp_ids.push_back(*id);
-        pl_ids = tmp_ids;
-        std::shuffle(pl_ids.begin(), pl_ids.end(), l_rand);
+    wt.push(ecnt, [&]() {
+      // 生き残りリストをシャッフルする
+      if (pl_ids.size() & 1)
+        pl_que.push(&pl_ids[pl_ids.size() - 1]);
+      else if (pl_que.empty())
+        return;
+      tmp_ids.resize(0);
+      while (int* id = pl_que.pop())
+        tmp_ids.push_back(*id);
+      pl_ids = tmp_ids;
+      std::shuffle(pl_ids.begin(), pl_ids.end(), l_rand);
     });
     for (int pi = 0; pi < pl_ids.size() / 2; pi++)
     {
-        wt.push([&](int idx) {
-          int&  i1 = pl_ids[idx];
-          int&  i2 = pl_ids[idx + 1];
-          auto& p1 = pl_list[i1];
-          auto& p2 = pl_list[i2];
-          battle(p1, p2);
-          if (p1.getHp() > 0)
-            pl_que.push(&i1);
-          if (p2.getHp() > 0)
-            pl_que.push(&i2);
-          int ec, en;
-          do
-          {
+      wt.push(
+          [&](int idx) {
+            int&  i1 = pl_ids[idx];
+            int&  i2 = pl_ids[idx + 1];
+            auto& p1 = pl_list[i1];
+            auto& p2 = pl_list[i2];
+            battle(p1, p2);
+            if (p1.getHp() > 0)
+              pl_que.push(&i1);
+            if (p2.getHp() > 0)
+              pl_que.push(&i2);
+            int ec, en;
+            do
+            {
               ec = ecnt;
               en = ec - 1;
-          } while (ecnt.compare_exchange_weak(ec, en) == false);
-        }, pi * 2);
+            } while (ecnt.compare_exchange_weak(ec, en) == false);
+          },
+          pi * 2);
     }
     if (wait() == false)
     {
-        char pm[128];
-        snprintf(pm,sizeof(pm),"E:%d",ecnt.load());
-        std::cout << pm << std::endl;
+      char pm[128];
+      snprintf(pm, sizeof(pm), "E:%d", ecnt.load());
+      std::cout << pm << std::endl;
     }
-    if (pl_ids.size()== 1)
+    if (pl_ids.size() == 1)
     {
       // 一人になったので終了
       std::cout << "[" << i << "] survive only one." << std::endl;

@@ -42,7 +42,7 @@ private:
   atomic_work_size_t       buffer_index{0};
   Queue<Worker>            queue;
   std::vector<std::thread> thread_list;
-  
+
   //
   void add_atomic(std::atomic_int& i, int a)
   {
