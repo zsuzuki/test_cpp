@@ -6,20 +6,25 @@ main(int argc, char** argv)
 {
   std::vector<int> v;
   Queue<int>       q(20);
+  int cnt = 0;
 
   v.resize(10);
-  for (size_t i = 0; i < v.size(); i++)
+  for (int l = 0; l < 4; l++)
   {
-    v[i] = i;
-    if (q.push(&v[i]) == false)
+    for (size_t i = 0; i < v.size(); i++)
     {
-      std::cerr << "not pushed." << std::endl;
+      v[i] = cnt++;
+      if (q.push(&v[i]) == false)
+      {
+        std::cerr << "not pushed." << std::endl;
+      }
     }
-  }
 
-  while (int* v = q.pop())
-  {
-    std::cout << *v << std::endl;
+    while (int* v = q.pop())
+    {
+      std::cout << *v << std::endl;
+    }
+    std::cout << (q.empty() ? "EMPTY" : "-") << std::endl;
   }
 
   return 0;

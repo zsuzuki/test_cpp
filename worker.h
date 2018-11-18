@@ -42,32 +42,39 @@ private:
   atomic_work_size_t       buffer_index{0};
   Queue<Worker>            queue;
   std::vector<std::thread> thread_list;
+  
+  //
+  void add_atomic(std::atomic_int& i, int a)
+  {
+    int c, n;
+    do
+    {
+      c = i;
+      n = c + a;
+    } while (i.compare_exchange_weak(c, n) == false);
+  }
 
   // スレッド本体
   void execute()
   {
-    launch++;
+    add_atomic(launch, 1);
     do
     {
+      add_atomic(exec_count, 1);
       auto* p = queue.pop();
       if (p)
       {
         auto* c = p->getCounter();
         if (c == nullptr || *c <= 0)
-        {
-          exec_count++;
           p->run();
-          --exec_count;
-        }
         else
-        {
           add(p);
-        }
       }
       else
       {
         std::this_thread::sleep_for(std::chrono::microseconds(0));
       }
+      add_atomic(exec_count, -1);
     } while (enabled);
   }
 
