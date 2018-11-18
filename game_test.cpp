@@ -190,10 +190,9 @@ main(int argc, char** argv)
     status_alloc(pl, 15);
   }
 
-  std::vector<int> pl_ids, tmp_ids;
+  std::vector<int> pl_ids;
   pl_ids.resize(pl_list.size());
-  tmp_ids.reserve(pl_list.size());
-  Queue<int> pl_que{pl_list.size() * 2};
+  NQueue<int> pl_que{pl_list.size() * 2, -1};
 
   // 戦闘ループ
   std::iota(pl_ids.begin(), pl_ids.end(), 0);
@@ -205,29 +204,29 @@ main(int argc, char** argv)
     // 最後に実行するものを待たせておく
     wt.push(ecnt, [&]() {
       // 生き残りリストをシャッフルする
-      if (pl_ids.size() & 1)
-        pl_que.push(&pl_ids[pl_ids.size() - 1]);
+      auto sz = pl_ids.size();
+      if (sz & 1)
+        pl_que.push(pl_ids[sz - 1]);
       else if (pl_que.empty())
         return;
-      tmp_ids.resize(0);
-      while (int* id = pl_que.pop())
-        tmp_ids.push_back(*id);
-      pl_ids = tmp_ids;
+      pl_ids.resize(0);
+      while (auto id = pl_que.pop())
+        pl_ids.push_back(id.value);
       std::shuffle(pl_ids.begin(), pl_ids.end(), l_rand);
     });
     for (int pi = 0; pi < pl_ids.size() / 2; pi++)
     {
       wt.push(
           [&](int idx) {
-            int&  i1 = pl_ids[idx];
-            int&  i2 = pl_ids[idx + 1];
+            int   i1 = pl_ids[idx];
+            int   i2 = pl_ids[idx + 1];
             auto& p1 = pl_list[i1];
             auto& p2 = pl_list[i2];
             battle(p1, p2);
             if (p1.getHp() > 0)
-              pl_que.push(&i1);
+              pl_que.push(i1);
             if (p2.getHp() > 0)
-              pl_que.push(&i2);
+              pl_que.push(i2);
             int ec, en;
             do
             {
