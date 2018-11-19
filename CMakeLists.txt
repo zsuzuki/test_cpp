@@ -46,6 +46,10 @@ project(queue)
 set(queue_src queue.cpp)
 add_executable(queue ${queue_src})
 ##
+project(dynamiccast)
+set(dcast_src dynamic_cast.cpp)
+add_executable(dynamiccast ${dcast_src})
+##
 project(game)
 add_custom_command (
   OUTPUT
