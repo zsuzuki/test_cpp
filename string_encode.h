@@ -21,10 +21,10 @@ enum class CHCODE : uint64_t
   C_3,
   C_4,
   C_5,
-  C_6,
-  C_7,
-  C_8,
-  C_9,
+  C_A,
+  C_E,
+  C_I,
+  C_T,
   C_Hyphen,
   C_Plus,
   C_Slash,
@@ -32,15 +32,15 @@ enum class CHCODE : uint64_t
   C_RBrace,
   C_Colon,
   // long(6bits)
-  C_A = C_LONG,
+  C_6 = C_LONG,
   C_B,
   C_C,
   C_D,
-  C_E,
+  C_7,
   C_F,
   C_G,
   C_H,
-  C_I,
+  C_8,
   C_J,
   C_K,
   C_L,
@@ -51,7 +51,7 @@ enum class CHCODE : uint64_t
   C_Q,
   C_R,
   C_S,
-  C_T,
+  C_9,
   C_U,
   C_V,
   C_W,
@@ -133,7 +133,7 @@ encode(const char* str)
 std::string
 decode(uint64_t code)
 {
-  static constexpr char decode_map[] = "0123456789-+/():abcdefghijklmnopqrstuvwxyz?.@#$&";
+  static constexpr char decode_map[] = "012345aeit-+/():6bcd7fgh8jklmnopqrs9uvwxyz?.@#$&";
 
   auto l   = code & 0xf;
   int  bit = 63;
