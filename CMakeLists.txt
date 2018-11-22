@@ -50,6 +50,10 @@ project(dynamiccast)
 set(dcast_src dynamic_cast.cpp)
 add_executable(dynamiccast ${dcast_src})
 ##
+project(charcount)
+set(ccount_src charcount.cpp)
+add_executable(charcount ${ccount_src})
+##
 project(game)
 add_custom_command (
   OUTPUT
