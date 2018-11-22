@@ -11,6 +11,9 @@ atomicを使った、スレッドセーフなキュー。
 いわゆるジョブ。
 単に登録したものを実行するだけ。
 
+### zlib.hpp
+zlibを使って、.gz形式の圧縮・展開を行う。
+
 ### queue.cpp
 atomic_queue.hのテストコード。
 
@@ -28,7 +31,7 @@ worker.hのテストコード。
 memcachedの使用テストコード。
 
 ### zlib_test.cpp
-zlibを使うテスト。
+zlib.hppを使うテスト。サンプルはファイルを.gzで圧縮・展開する。
 
 ### size.cpp
 構造体のサイズを表示するだけ。
@@ -53,3 +56,6 @@ UTF-8等、ASCII以外の文字は考慮しない。
 
 ### dynamic_cast.cpp
 アプリケーションのコンテキスト情報の格納などに使えるような、任意の方のshared_ptrを保持するクラスのテスト。
+
+### game_test.cpp/game_struct.hpp
+ゲーム的な構造体をtomlで生成して、それを使って、ランダムで簡単な戦闘を行わせる。
