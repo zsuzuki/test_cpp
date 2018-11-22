@@ -1,4 +1,5 @@
 
+#include "string_encode.h"
 #include <cstdint>
 #include <iostream>
 #include <map>
@@ -7,6 +8,7 @@
 
 namespace
 {
+//
 class Context
 {
   class Module
@@ -14,12 +16,15 @@ class Context
   public:
     virtual ~Module() = default;
   };
-  using ModPtr = std::shared_ptr<Module>;
-  std::map<std::string, ModPtr> mod_list;
+  using ModPtr       = std::shared_ptr<Module>;
+  using LabelCompare = bool (*)(const char*, const char*);
+  using LabelMap     = std::map<const char*, ModPtr, LabelCompare>;
+  LabelMap mod_list{[](auto* a, auto* b) { return strcmp(a, b) < 0; }};
 
 public:
+  // 登録(引数有りコンストラクタ)
   template <class T, class... Args>
-  std::shared_ptr<T> create(std::string name, Args... a)
+  std::shared_ptr<T> create(const char* name, Args... a)
   {
     struct M : public T, Module
     {
@@ -29,8 +34,9 @@ public:
     mod_list[name] = Tptr;
     return Tptr;
   }
+  // 登録(引数無しコンストラクタ)
   template <class T>
-  std::shared_ptr<T> create(std::string name)
+  std::shared_ptr<T> create(const char* name)
   {
     struct M : public T, Module
     {
@@ -40,8 +46,9 @@ public:
     mod_list[name] = Tptr;
     return Tptr;
   }
+  // 取得
   template <class T>
-  std::shared_ptr<T> get(std::string name)
+  std::shared_ptr<T> get(const char* name)
   {
     auto p = mod_list[name];
     if (p)
@@ -51,6 +58,10 @@ public:
     return nullptr;
   }
 };
+
+//
+// test struct
+//
 struct Test
 {
   std::string name;
@@ -58,7 +69,7 @@ struct Test
   Test(std::string n, std::string m) : name(n), msg(m) { std::cout << "sizeof(Test):" << sizeof(Test) << std::endl; }
   virtual ~Test() { std::cout << "destruct: " << name << std::endl; }
   const char* get() const { return msg.c_str(); }
-}; // namespace
+};
 struct Sample
 {
   std::string msg;
@@ -73,9 +84,10 @@ struct NoArgs
   const char* get() const { return "no args"; }
 };
 
+// 存在チェック
 template <class T>
 void
-check(Context& ctx, std::string n)
+check(Context& ctx, const char* n)
 {
   auto t = ctx.get<T>(n);
   if (t)
