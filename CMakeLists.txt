@@ -54,6 +54,10 @@ project(charcount)
 set(ccount_src charcount.cpp)
 add_executable(charcount ${ccount_src})
 ##
+project(makerandom)
+set(mrand_src make_random.cpp)
+add_executable(makerandom ${mrand_src})
+##
 project(game)
 add_custom_command (
   OUTPUT
