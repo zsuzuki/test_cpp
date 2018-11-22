@@ -4,26 +4,51 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "cbuild",
-            "command": "cbuild",
-            "args": [
-                "-t",
-                "th"
-            ],
+            "label": "cmake",
+            "command": "ninja",
+            "options": {
+                "cwd": "${workspaceRoot}/bin"
+            },
             "type": "process",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
+            "problemMatcher": "$gcc"
         },
         {
-            "label": "ninja",
+            "label": "setup",
+            "command": "cmake",
+            "args": [
+                "-G",
+                "Ninja",
+                "${workspaceRoot}"
+            ],
+            "options": {
+                "cwd": "${workspaceRoot}/bin"
+            },
             "type": "process",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "command": "ninja",
+            "dependsOn": [
+                "make dir"
+            ],
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "make dir",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "args": [
+                "-p",
+                "${workspaceRoot}/bin"
+            ],
+            "command": "mkdir",
             "problemMatcher": "$gcc"
         }
     ]
