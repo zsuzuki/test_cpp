@@ -70,6 +70,11 @@ struct Test
   virtual ~Test() { std::cout << "destruct: " << name << std::endl; }
   const char* get() const { return msg.c_str(); }
 };
+struct Test2 : public Test
+{
+  Test2(std::string n, std::string m) : Test(n, m) { std::cout << "test2" << std::endl; }
+  ~Test2() { std::cout << "Test2" << std::endl; }
+};
 struct Sample
 {
   std::string msg;
@@ -105,7 +110,7 @@ main()
   Context ctx;
   auto    t0 = ctx.create<Test>("test1", u8"Hello"s, u8"World"s);
   ctx.create<Sample>("sample1", u8"Sample"s);
-  ctx.create<Test>("test2", u8"pointer"s, u8"gogo"s);
+  ctx.create<Test2>("test2", u8"pointer"s, u8"gogo"s);
   ctx.create<NoArgs>("args1");
   std::cout << "start: " << t0->get() << std::endl;
   check<Test>(ctx, "test1");
