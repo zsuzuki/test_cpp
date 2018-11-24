@@ -54,8 +54,8 @@ UTF-8等、ASCII以外の文字は考慮しない。
 ### make_random.cpp
 ビット数(マスク)と要素数を指定して、ランダムテーブルを生成する。
 
-### dynamic_cast.cpp
-アプリケーションのコンテキスト情報の格納などに使えるような、任意の方のshared_ptrを保持するクラスのテスト。
+### dynamic_cast.cpp/context.h
+アプリケーションのコンテキスト情報の格納などに使えるような、任意の型のshared_ptrを保持するクラスのテスト。
 
 ### game_test.cpp/game_struct.hpp
 ゲーム的な構造体をtomlで生成して、それを使って、ランダムで簡単な戦闘を行わせる。
