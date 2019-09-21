@@ -58,6 +58,11 @@ project(makerandom)
 set(mrand_src make_random.cpp)
 add_executable(makerandom ${mrand_src})
 ##
+project(zstd_test)
+set(zstd_src zstd_test.cpp)
+add_executable(zstd_test ${zstd_src})
+target_link_libraries(zstd_test zstd)
+##
 project(game)
 add_custom_command (
   OUTPUT
