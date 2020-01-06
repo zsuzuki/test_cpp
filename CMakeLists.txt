@@ -1,15 +1,13 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 enable_language(CXX)
-if(VERSION VERSION_GREATER 3.0)
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
-else()
-    set(CMAKE_CXX_FLAGS "-std=c++14")
-endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 include_directories(/usr/local/include inc)
 link_directories(/usr/local/lib)
+
+find_package(SQLite CONFIG)
 
 ##
 project(string)
@@ -62,6 +60,11 @@ project(zstd_test)
 set(zstd_src zstd_test.cpp)
 add_executable(zstd_test ${zstd_src})
 target_link_libraries(zstd_test zstd)
+##
+project(sqlite_test)
+set(sqlite_src sqlite3.cpp)
+add_executable(sqlite_test ${sqlite_src})
+target_link_libraries(sqlite_test sqlite3)
 ##
 project(game)
 add_custom_command (
