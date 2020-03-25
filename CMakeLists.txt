@@ -79,3 +79,7 @@ add_executable(game ${game_src})
 add_custom_target(generate_gamestruct DEPENDS ${PROJECT_SOURCE_DIR}/game_struct.hpp)
 add_dependencies(game generate_gamestruct)
 target_link_libraries(game pthread)
+##
+project(md5_test)
+set(md5_src md5.cpp)
+add_executable(md5_test ${md5_src})
