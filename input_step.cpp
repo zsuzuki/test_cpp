@@ -43,7 +43,7 @@ getInput()
     c_cnt++;
   return std::make_pair(si.v, result);
 }
-}
+} // namespace
 
 //
 // on/off switch update

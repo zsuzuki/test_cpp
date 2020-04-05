@@ -39,15 +39,16 @@ main(int argc, char** argv)
     }
   }
 
-  rc = sqlite3_exec(db, sql.str(),
-                    [](void*, int argc, char** argv, char** col) {
-                      int i;
-                      for (i = 0; i < argc; i++)
-                        std::cout << col[i] << " = " << (argv[i] ? argv[i] : "null") << " /";
-                      std::cout << std::endl;
-                      return 0;
-                    },
-                    0, &errmsg);
+  rc = sqlite3_exec(
+      db, sql.str(),
+      [](void*, int argc, char** argv, char** col) {
+        int i;
+        for (i = 0; i < argc; i++)
+          std::cout << col[i] << " = " << (argv[i] ? argv[i] : "null") << " /";
+        std::cout << std::endl;
+        return 0;
+      },
+      0, &errmsg);
   std::cout << "req done." << std::endl;
   if (rc != 0)
   {
