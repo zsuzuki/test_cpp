@@ -8,6 +8,7 @@ include_directories(/usr/local/include inc)
 link_directories(/usr/local/lib)
 
 find_package(SQLite CONFIG)
+find_package(lz4 CONFIG)
 
 ##
 project(string)
@@ -65,6 +66,11 @@ project(sqlite_test)
 set(sqlite_src sqlite3.cpp)
 add_executable(sqlite_test ${sqlite_src})
 target_link_libraries(sqlite_test sqlite3)
+##
+project(lz4_test)
+set(lz4_src lz4.cpp)
+add_executable(lz4_test ${lz4_src})
+target_link_libraries(lz4_test lz4)
 ##
 project(game)
 add_custom_command (
