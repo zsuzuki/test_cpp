@@ -9,6 +9,8 @@ link_directories(/usr/local/lib)
 
 find_package(SQLite CONFIG)
 find_package(lz4 CONFIG)
+find_package(leveldb CONFIG REQUIRED)
+find_package(Threads REQUIRED)
 
 ##
 project(string)
@@ -71,6 +73,11 @@ project(lz4_test)
 set(lz4_src lz4.cpp)
 add_executable(lz4_test ${lz4_src})
 target_link_libraries(lz4_test lz4)
+##
+project(lvdb_test)
+set(lvdb_src leveldb.cpp)
+add_executable(lvdb_test ${lvdb_src})
+target_link_libraries(lvdb_test PRIVATE leveldb::leveldb)
 ##
 project(game)
 add_custom_command (

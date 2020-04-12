@@ -42,8 +42,7 @@ test_write(std::ofstream& ofst, WriteInfo& wi)
 void
 test_compress(std::ofstream& ofst, std::ifstream& ifst)
 {
-  LZ4_stream_t  lz4Stream_body;
-  LZ4_stream_t* lz4Stream = &lz4Stream_body;
+  LZ4_stream_t lz4Stream;
 
   std::vector<BLOCK> inpBuf;
   std::vector<BLOCK> outBuf;
@@ -58,7 +57,7 @@ test_compress(std::ofstream& ofst, std::ifstream& ifst)
   wrlist.resize(40);
 
   auto ntime = std::chrono::steady_clock::now();
-  LZ4_initStream(lz4Stream, sizeof(*lz4Stream));
+  LZ4_initStream(&lz4Stream, sizeof(lz4Stream));
 
   auto f = std::async(std::launch::async, [&]() {
     while (inPage.load() != -2)
@@ -85,7 +84,7 @@ test_compress(std::ofstream& ofst, std::ifstream& ifst)
     int       opage    = outBufIndex % outBuf.size();
     auto&     winfo    = wrlist[opage];
     auto&     cmpBuf   = outBuf[opage];
-    const int cmpBytes = LZ4_compress_fast_continue(lz4Stream, inpPtr, cmpBuf.data(), inpBytes, cmpBuf.size(), 1);
+    const int cmpBytes = LZ4_compress_fast_continue(&lz4Stream, inpPtr, cmpBuf.data(), inpBytes, cmpBuf.size(), 1);
     if (cmpBytes <= 0)
       break;
     {
