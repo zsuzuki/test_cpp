@@ -11,6 +11,9 @@ find_package(SQLite CONFIG)
 find_package(lz4 CONFIG)
 find_package(leveldb CONFIG REQUIRED)
 find_package(Threads REQUIRED)
+find_package(Boost 1.66.0 REQUIRED COMPONENTS thread iostreams filesystem exception)
+
+include_directories(${Boost_INCLUDE_DIRS})
 
 ##
 project(string)
@@ -59,6 +62,10 @@ project(makerandom)
 set(mrand_src make_random.cpp)
 add_executable(makerandom ${mrand_src})
 ##
+project(temptest)
+set(temptest_src temptest.cpp)
+add_executable(temptest ${temptest_src})
+##
 project(zstd_test)
 set(zstd_src zstd_test.cpp)
 add_executable(zstd_test ${zstd_src})
@@ -78,6 +85,11 @@ project(lvdb_test)
 set(lvdb_src leveldb.cpp)
 add_executable(lvdb_test ${lvdb_src})
 target_link_libraries(lvdb_test PRIVATE leveldb::leveldb)
+##
+project(boostfs_test)
+set(boostfs_src boostfs.cpp)
+add_executable(boostfs_test ${boostfs_src})
+target_link_libraries(boostfs_test PRIVATE ${Boost_LIBRARIES})
 ##
 project(game)
 add_custom_command (
