@@ -45,13 +45,17 @@ class SerialCommunicator
   time_point               lastSendTime;
   std::queue<std::string>  sendQueue;
   RecvStatus               recvFunction;
+  bool                     sendEnable;
 
   void sendCommand()
   {
+    if (!sendEnable)
+      return;
+
     using namespace std::chrono;
     auto nowtime = steady_clock::now();
     auto diff    = duration_cast<microseconds>(nowtime - lastSendTime).count();
-    if (diff <= 1000 * 1000 / 115200 + 200 * 1000)
+    if (diff <= 1000 * 1000 / 115200)
       return;
     if (sendQueue.empty())
       return;
@@ -61,6 +65,7 @@ class SerialCommunicator
     // std::cout << "Send:" << f << std::endl;
     sendQueue.pop();
     lastSendTime = nowtime;
+    sendEnable   = false;
   }
 
   bool readStatus()
@@ -83,7 +88,6 @@ class SerialCommunicator
       {
         if (commandIn)
         {
-          commandIn = false;
           if (readString.empty() == false)
           {
             if (argumentIn)
@@ -92,10 +96,16 @@ class SerialCommunicator
               command = readString;
           }
           readString.clear();
-          if (recvFunction)
+          if (command == "Complete")
+          {
+            sendEnable = true;
+          }
+          else if (recvFunction)
           {
             recvFunction(command, arguments);
           }
+          commandIn  = false;
+          argumentIn = false;
         }
         else
         {
@@ -173,14 +183,15 @@ public:
     arguments.clear();
     lastSendTime = std::chrono::steady_clock::now();
     recvFunction = recvf;
+    sendEnable   = true;
 
     return true;
   };
 
-  void print(const char* msg, int x, int y, int color = 0xffff)
+  void print(const char* msg, int x, int y, int color = 0xffff, int bg = 0)
   {
     char   buff[64];
-    size_t sz = snprintf(buff, sizeof(buff), "#%03d%03d%04x%s\n", x, y, color, msg);
+    size_t sz = snprintf(buff, sizeof(buff), "#%03d%03d%04x%04x%s\n", x, y, color, bg, msg);
     sendQueue.push({buff, sz});
   }
 
@@ -195,6 +206,20 @@ public:
   {
     char   buff[64];
     size_t sz = snprintf(buff, sizeof(buff), "$%03d%03d%03d%03d%04x\n", x, y, w, h, color);
+    sendQueue.push({buff, sz});
+  }
+
+  void hline(int x, int y, int w, int color = 0xffff)
+  {
+    char   buff[64];
+    size_t sz = snprintf(buff, sizeof(buff), "-%03d%03d%03d%04x\n", x, y, w, color);
+    sendQueue.push({buff, sz});
+  }
+
+  void vline(int x, int y, int h, int color = 0xffff)
+  {
+    char   buff[64];
+    size_t sz = snprintf(buff, sizeof(buff), "|%03d%03d%03d%04x\n", x, y, h, color);
     sendQueue.push({buff, sz});
   }
 

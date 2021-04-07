@@ -21,9 +21,14 @@ main(int argc, char** argv)
       sc.print("Send Message", 150, 70);
       sc.print("Sample Program", 80, 240, Arduino::RGB(255, 255, 0));
       sc.rect(140, 150, 140, 40, Arduino::RGB(0, 255, 255));
-      sc.print("Ghost Busters!", 160, 210, Arduino::RGB(255, 0, 0));
       sc.rect(140, 90, 140, 50, Arduino::RGB(0, 255, 0));
       sc.fill(200, 160, 60, 20, Arduino::RGB(128, 128, 128));
+      sc.fill(140, 200, 140, 20, Arduino::RGB(180, 180, 0));
+      sc.print("My Computer", 160, 206, Arduino::RGB(50, 0, 0), Arduino::RGB(180, 180, 0));
+      sc.hline(50, 20, 390);
+      sc.vline(50, 20, 100);
+      sc.vline(440, 20, 100);
+      sc.print("TEST", 300, 50, Arduino::RGB(255, 0, 0));
     }
   });
 
