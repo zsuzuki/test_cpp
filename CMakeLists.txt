@@ -12,8 +12,10 @@ find_package(lz4 CONFIG)
 find_package(leveldb CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Boost 1.66.0 REQUIRED COMPONENTS thread iostreams filesystem exception)
+find_package(PNG 1.6.0 REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${PNG_INCLUDE_DIRS})
 
 ##
 project(string)
@@ -90,6 +92,15 @@ project(boostfs_test)
 set(boostfs_src boostfs.cpp)
 add_executable(boostfs_test ${boostfs_src})
 target_link_libraries(boostfs_test PRIVATE ${Boost_LIBRARIES})
+##
+project(conv_arimg)
+set(conv_arimg_src conv_arimg.cpp)
+add_executable(conv_arimg ${conv_arimg_src})
+target_link_libraries(conv_arimg PRIVATE ${PNG_LIBRARIES})
+##
+project(arduino_test)
+set(arduino_test_src arduino_test.cpp)
+add_executable(arduino_test ${arduino_test_src})
 ##
 project(game)
 add_custom_command (
