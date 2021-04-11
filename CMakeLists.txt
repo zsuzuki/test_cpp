@@ -102,6 +102,11 @@ project(arduino_test)
 set(arduino_test_src arduino_test.cpp)
 add_executable(arduino_test ${arduino_test_src})
 ##
+project(uuid)
+set(uuid_src uuid.cpp)
+add_executable(uuid ${uuid_src})
+target_link_libraries(uuid PRIVATE ${Boost_LIBRARIES})
+##
 project(game)
 add_custom_command (
   OUTPUT
