@@ -124,3 +124,7 @@ target_link_libraries(game pthread)
 project(md5_test)
 set(md5_src md5.cpp)
 add_executable(md5_test ${md5_src})
+##
+project(bdfread)
+set(bdfread_src bdfread.cpp)
+add_executable(bdfread ${bdfread_src})
