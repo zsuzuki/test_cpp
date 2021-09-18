@@ -14,6 +14,29 @@ namespace
 {
 
 ///
+bool
+inrange(uint32_t code)
+{
+  if (code <= 0x7f)
+    return true; // ascii
+  if (code >= 0x2000 && code <= 0x206f)
+    return true; // 記号
+  if (code >= 0x25a0 && code <= 0x29ff)
+    return true; // 記号
+  if (code >= 0x3000 && code <= 0x303f)
+    return true; // 句読点
+  if (code >= 0x3040 && code <= 0x309f)
+    return true; // 平仮名
+  if (code >= 0x30a0 && code <= 0x30ff)
+    return true; // カタカナ
+  if (code >= 0x4e00 && code <= 0x9ffc)
+    return true; // 漢字
+  if (code >= 0xfff0 && code <= 0xffef)
+    return true; // 全角英数字
+  return false;
+}
+
+///
 std::string
 convert(uint32_t c)
 {
@@ -23,17 +46,17 @@ convert(uint32_t c)
   // 0000 0080-0000 07FF | 110xxxxx 10xxxxxx
   // 0000 0800-0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
   // 0001 0000-0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-  if (c < 0x7f)
+  if (c <= 0x7f)
   {
     buff[0] = c;
   }
-  else if (c < 0x7ff)
+  else if (c <= 0x7ff)
   {
     buff[0] = 0xc0 | (c >> 6);
     buff[1] = 0x80 | (c & 0x3f);
     len     = 2;
   }
-  else if (c < 0xffff)
+  else if (c <= 0xffff)
   {
     buff[0] = 0xe0 | (c >> 12);
     buff[1] = 0x80 | ((c >> 6) & 0x3f);
@@ -171,6 +194,7 @@ main(int argc, char** argv)
 
   font current;
   current.bitmap.resize(fontSize);
+
   //
   int cnt      = 0;
   int onBitmap = -1;
@@ -196,7 +220,8 @@ main(int argc, char** argv)
     else if (cmp(line, "ENDCHAR", arg))
     {
       onBitmap = -1;
-      fontList.push_back(current);
+      if (inrange(current.code))
+        fontList.push_back(current);
     }
     else if (onBitmap >= 0)
     {
