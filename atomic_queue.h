@@ -7,21 +7,50 @@
 #include <cstddef>
 #include <vector>
 
+template <class T>
+struct QueueValue
+{
+  std::atomic<T> value;
+
+  //
+  QueueValue() = default;
+  QueueValue(T n) { value = n; }
+  QueueValue(T& n) { value = n; }
+  QueueValue(T&& n) { value = n; }
+
+  //
+  QueueValue<T>& operator=(const QueueValue<T>& other)
+  {
+    value = other.pointer;
+    return *this;
+  }
+  QueueValue<T>& operator=(T other)
+  {
+    value = other;
+    return *this;
+  }
+    operator T() { return value.load(); }
+  T load() const { return value.load(); }
+};
+
 //
 // atomic queue <pointer> class
 //
 template <class T>
 class Queue
 {
-  std::vector<T*> buffer;
+  std::vector<QueueValue<T*>> buffer;
+
   std::atomic_int start{0};
   std::atomic_int end{0};
 
 public:
-  Queue(size_t sz)
+  Queue(size_t sz) : buffer(sz)
   {
-    buffer.resize(sz);
-    std::fill(buffer.begin(), buffer.end(), nullptr);
+    for (auto& pt : buffer)
+    {
+      pt = nullptr;
+    }
   }
 
   //
@@ -48,7 +77,7 @@ public:
     if (start.compare_exchange_weak(s, n) == false)
       return nullptr;
 
-    volatile auto p = buffer[s];
+    auto p = buffer[s].load();
     while (p == nullptr)
       p = buffer[s];
 
@@ -64,17 +93,19 @@ public:
 template <class T>
 class NQueue
 {
-  std::vector<T>  buffer;
-  std::atomic_int start{0};
-  std::atomic_int end{0};
-  T               invalid_value;
+  std::vector<QueueValue<T>> buffer;
+  std::atomic_int            start{0};
+  std::atomic_int            end{0};
+  T                          invalid_value;
 
 public:
-  NQueue(size_t sz, T invalid = 0)
+  NQueue(size_t sz, T invalid = 0) : buffer(sz)
   {
     invalid_value = invalid;
-    buffer.resize(sz);
-    std::fill(buffer.begin(), buffer.end(), invalid);
+    for (auto& pt : buffer)
+    {
+      pt = invalid;
+    }
   }
 
   //
@@ -108,7 +139,7 @@ public:
     if (start.compare_exchange_weak(s, n) == false)
       return Result{invalid_value, false};
 
-    volatile auto p = buffer[s];
+    auto p = buffer[s].load();
     while (p == invalid_value)
       p = buffer[s];
 

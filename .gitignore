@@ -1,4 +1,5 @@
-build
+build/
+.cache/
 build.ninja
 bin
 .vscode
