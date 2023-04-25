@@ -151,6 +151,10 @@ public:
   // 全てのワーカーが終了しているか
   bool checkComplete() const { return exec_count == 0 && queue.empty(); }
 
+  //
+  bool remain() const { return !queue.empty(); }
+  int  remain2() const { return exec_count.load(); }
+
   // 登録実行(引数付き)
   template <typename F, typename A>
   bool push(F f, A a)

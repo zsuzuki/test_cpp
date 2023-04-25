@@ -72,14 +72,20 @@ public:
   {
     int s = start;
     if (s == end)
+    {
       return nullptr;
+    }
     int n = (s + 1) % buffer.size();
     if (start.compare_exchange_weak(s, n) == false)
+    {
       return nullptr;
+    }
 
     auto p = buffer[s].load();
     while (p == nullptr)
+    {
       p = buffer[s];
+    }
 
     buffer[s] = nullptr;
     return p;
