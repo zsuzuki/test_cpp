@@ -1,7 +1,10 @@
 //
 #include "worker2.h"
 #include <atomic>
+#include <condition_variable>
 #include <iostream>
+#include <mutex>
+#include <thread>
 #include <vector>
 
 namespace
@@ -114,6 +117,113 @@ test2()
   wt.wait();
 }
 
+//
+std::atomic_int  exec{0};
+std::atomic_int  start{0};
+std::atomic_int  end{0};
+std::vector<int> buffer;
+//
+bool
+push(int p)
+{
+  int n, e;
+  do
+  {
+    e = end.load();
+    n = (e + 1) % buffer.size();
+    if (n == start)
+    {
+      exec = 0;
+      return false;
+    }
+  } while (end.compare_exchange_weak(e, n) == false);
+  buffer[e] = p;
+  exec      = 0;
+  return true;
+}
+
+int
+pop()
+{
+  int s = start;
+  if (s == end)
+  {
+    return -1;
+  }
+
+  int n = (s + 1) % buffer.size();
+  if (start.compare_exchange_weak(s, n) == false)
+  {
+    return -1;
+  }
+
+  auto p    = buffer[s];
+  buffer[s] = -1;
+  return p;
+}
+
+void
+test3()
+{
+  buffer.resize(500);
+  std::fill(buffer.begin(), buffer.end(), -1);
+
+  std::condition_variable cond;
+  std::mutex              mtx;
+  std::atomic_bool        en;
+
+  auto run = [&]()
+  {
+    {
+      std::unique_lock lk(mtx);
+      cond.wait(lk);
+    }
+    for (int i = 0; i < buffer.size() / 3; i++)
+    {
+      push(i);
+      std::cout << "push" << std::endl;
+    }
+  };
+
+  auto get = [&]()
+  {
+    {
+      std::unique_lock lk(mtx);
+      cond.wait(lk);
+    }
+    while (en)
+    {
+      for (;;)
+      {
+        int n = pop();
+        if (n == -1)
+        {
+          break;
+        }
+        else
+        {
+          std::cout << n << std::endl;
+        }
+      }
+    }
+  };
+
+  en      = true;
+  auto t4 = std::thread([&] { get(); });
+  auto t1 = std::thread([&] { run(); });
+  auto t2 = std::thread([&] { run(); });
+  auto t3 = std::thread([&] { run(); });
+
+  std::this_thread::sleep_for(std::chrono::microseconds(500));
+  cond.notify_all();
+
+  t1.join();
+  t2.join();
+  t3.join();
+  en = false;
+  t4.join();
+}
+
 } // namespace
 
 //
@@ -122,6 +232,7 @@ main(int argc, char** argv)
 {
   test1();
   test2();
+  test3();
 
   return 0;
 }

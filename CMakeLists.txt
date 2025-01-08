@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 3.0)
+#
+# Copyright 2024 Suzuki Yoshinori(wave.suzuki.z@gmail.com)
+#
+cmake_minimum_required(VERSION 3.20.0)
 enable_language(CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,7 +17,7 @@ find_package(SQLite CONFIG)
 find_package(lz4 CONFIG)
 find_package(leveldb CONFIG REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost 1.66.0 REQUIRED COMPONENTS thread iostreams filesystem exception)
+find_package(Boost 1.80.0 REQUIRED COMPONENTS thread iostreams filesystem exception fiber)
 find_package(PNG 1.6.0 REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
@@ -136,3 +139,33 @@ add_executable(md5_test ${md5_src})
 project(bdfread)
 set(bdfread_src bdfread.cpp)
 add_executable(bdfread ${bdfread_src})
+##
+project(fi/ertest)
+set(fibertest_src fiber.cpp)
+add_executable(fibertest ${fibertest_src})
+target_link_libraries(fibertest ${Boost_LIBRARIES})
+##
+project(backtracetest)
+set(bttest_src backtrace.cpp)
+add_executable(backtracetest ${bttest_src})
+target_link_options(backtracetest PRIVATE -rdynamic)
+##
+project(semaphoretest)
+set(semaphoretest_src semaphore.cpp)
+add_executable(semaphoretest ${semaphoretest_src})
+target_link_libraries(semaphoretest pthread)
+##
+project(newpasswd)
+set(passwd_src password.cpp)
+add_executable(newpasswd ${passwd_src})
+##
+if (APPLE)
+##
+project(armneon)
+set(armneon_src arm_neon_test.cpp)
+add_executable(armneon ${armneon_src})
+##
+project(gcd)
+set(gcd_src gcd.cpp)
+add_executable(gcd ${gcd_src})
+endif()

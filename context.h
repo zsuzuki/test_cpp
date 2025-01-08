@@ -3,10 +3,10 @@
 //
 #pragma once
 
-#include <map>
-#include <memory>
 #include <cstring>
 #include <iostream>
+#include <map>
+#include <memory>
 
 //
 class Context
@@ -23,17 +23,17 @@ class Context
 
 public:
   // 登録(引数有りコンストラクタ)
-  template <class T, class... Args>
-  std::shared_ptr<T> create(const char* name, Args... a)
-  {
-    struct M : public T, Module
-    {
-      M(Args... a) : T(a...) { std::cout << "Module sizeof:" << sizeof(M) << std::endl; }
-    };
-    auto Tptr      = std::make_shared<M>(a...);
-    mod_list[name] = Tptr;
-    return Tptr;
-  }
+  // template <class T, class... Args>
+  // std::shared_ptr<T> create(const char* name, Args... a)
+  // {
+  //   struct M : public T, Module
+  //   {
+  //     M(Args... a) : T(a...) { std::cout << "Module sizeof:" << sizeof(M) << std::endl; }
+  //   };
+  //   auto Tptr      = std::make_shared<M>(a...);
+  //   mod_list[name] = Tptr;
+  //   return Tptr;
+  // }
   // 登録(引数無しコンストラクタ)
   template <class T>
   std::shared_ptr<T> create(const char* name)

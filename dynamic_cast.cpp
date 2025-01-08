@@ -57,11 +57,11 @@ main()
 {
   using namespace std::literals::string_literals;
   Context ctx;
-  auto    t0 = ctx.create<Test>("test1", u8"Hello"s, u8"World"s);
-  ctx.create<Sample>("sample1", u8"Sample"s);
-  ctx.create<Test2>("test2", u8"pointer"s, u8"gogo"s);
+  // auto    t0 = ctx.create<Test>("test1", u8"Hello"s, u8"World"s);
+  // ctx.create<Sample>("sample1", u8"Sample"s);
+  // ctx.create<Test2>("test2", u8"pointer"s, u8"gogo"s);
   ctx.create<NoArgs>("args1");
-  std::cout << "start: " << t0->get() << std::endl;
+  // std::cout << "start: " << t0->get() << std::endl;
   check<Test>(ctx, "test1");
   check<Test>(ctx, "test2");
   check<Test>(ctx, "test3");
