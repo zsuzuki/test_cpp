@@ -4,12 +4,27 @@
 #include <dispatch/dispatch.h>
 #include <iostream>
 
+class Semaphore
+{
+  dispatch_semaphore_t sem = dispatch_semaphore_create(1);
+
+public:
+  ~Semaphore() { dispatch_release(sem); }
+
+  void lock() { dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER); }
+  void unlock() { dispatch_semaphore_signal(sem); }
+};
+
+Semaphore sem;
+
 void
 task1(int num)
 {
   for (int i = 0; i < 3; i++)
   {
-    std::cout << "Hello: " << num << "\n";
+    sem.lock();
+    std::cout << "Hello: " << num << ":" << i << "\n";
+    sem.unlock();
   }
 }
 
@@ -18,7 +33,9 @@ task2(int num)
 {
   for (int i = 0; i < 3; i++)
   {
-    std::cout << "World: " << num << "\n";
+    sem.lock();
+    std::cout << "World: " << num << ":" << i << "\n";
+    sem.unlock();
   }
 }
 
@@ -26,7 +43,7 @@ int
 main(int argc, char** argv)
 {
   auto group           = dispatch_group_create();
-  auto concurrentQueue = dispatch_queue_create("com.example.serialQueue", DISPATCH_QUEUE_CONCURRENT);
+  auto concurrentQueue = dispatch_queue_create("queueTest", DISPATCH_QUEUE_CONCURRENT);
 
   for (int i = 0; i < 20; i++)
   {
@@ -49,6 +66,9 @@ main(int argc, char** argv)
   std::cout << "in wait\n";
   dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
   std::cout << "completed.\n";
+
+  dispatch_release(concurrentQueue);
+  dispatch_release(group);
 
   return 0;
 }
